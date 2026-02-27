@@ -1,6 +1,6 @@
 import 'package:flutter_test/flutter_test.dart';
 
-import 'package:library_manager/main.dart';
+import 'package:library_manager/app.dart';
 
 void main() {
   testWidgets('App smoke test', (WidgetTester tester) async {
