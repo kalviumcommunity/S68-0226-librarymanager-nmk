@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:shadcn_ui/shadcn_ui.dart';
-import '../../main.dart';
+import '../../widgets/app_drawer.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -11,6 +11,7 @@ class HomeScreen extends StatefulWidget {
 
 class _HomeScreenState extends State<HomeScreen> {
   int _selectedCategory = 0;
+  final _scaffoldKey = GlobalKey<ScaffoldState>();
 
   final List<String> _categories = [
     'All',
@@ -95,20 +96,28 @@ class _HomeScreenState extends State<HomeScreen> {
     ),
   ];
 
-  void _toggleTheme() {
-    final current = themeModeNotifier.value;
-    themeModeNotifier.value =
-        current == ThemeMode.dark ? ThemeMode.light : ThemeMode.dark;
+  void _showNotifications(BuildContext context) {
+    final theme = ShadTheme.of(context);
+    final colorScheme = theme.colorScheme;
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: colorScheme.background,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (ctx) => _NotificationsSheet(theme: theme, colorScheme: colorScheme),
+    );
   }
 
   @override
   Widget build(BuildContext context) {
     final theme = ShadTheme.of(context);
-    final isDark = theme.brightness == Brightness.dark;
     final colorScheme = theme.colorScheme;
 
     return Scaffold(
+      key: _scaffoldKey,
       backgroundColor: colorScheme.background,
+      drawer: const AppDrawer(),
       body: CustomScrollView(
         slivers: [
           // ── App Bar ──────────────────────────────────────────
@@ -118,11 +127,11 @@ class _HomeScreenState extends State<HomeScreen> {
             elevation: 0,
             backgroundColor: colorScheme.background,
             surfaceTintColor: Colors.transparent,
-            title: Row(
-              children: [
-                Container(
-                  width: 30,
-                  height: 30,
+            leading: GestureDetector(
+              onTap: () => _scaffoldKey.currentState?.openDrawer(),
+              child: Padding(
+                padding: const EdgeInsets.all(10),
+                child: Container(
                   decoration: BoxDecoration(
                     color: colorScheme.primary,
                     borderRadius: BorderRadius.circular(8),
@@ -133,32 +142,22 @@ class _HomeScreenState extends State<HomeScreen> {
                     color: colorScheme.primaryForeground,
                   ),
                 ),
-                const SizedBox(width: 10),
-                Text(
-                  'LibraryOS',
-                  style: theme.textTheme.h4.copyWith(
-                    color: colorScheme.foreground,
-                    fontWeight: FontWeight.w700,
-                    letterSpacing: -0.5,
-                  ),
-                ),
-              ],
+              ),
+            ),
+            title: Text(
+              'LibraryOS',
+              style: theme.textTheme.h4.copyWith(
+                color: colorScheme.foreground,
+                fontWeight: FontWeight.w700,
+                letterSpacing: -0.5,
+              ),
             ),
             actions: [
               ShadButton.ghost(
                 size: ShadButtonSize.sm,
-                onPressed: () {},
+                onPressed: () => _showNotifications(context),
                 child: Icon(
                   LucideIcons.bell,
-                  size: 18,
-                  color: colorScheme.mutedForeground,
-                ),
-              ),
-              ShadButton.ghost(
-                size: ShadButtonSize.sm,
-                onPressed: _toggleTheme,
-                child: Icon(
-                  isDark ? LucideIcons.sun : LucideIcons.moon,
                   size: 18,
                   color: colorScheme.mutedForeground,
                 ),
@@ -680,4 +679,212 @@ class _ActivityItem {
   final String action;
   final String time;
   final IconData icon;
+}
+
+// ── Notifications bottom sheet ─────────────────────────────────────────────
+
+class _NotificationsSheet extends StatelessWidget {
+  const _NotificationsSheet({
+    required this.theme,
+    required this.colorScheme,
+  });
+
+  final ShadThemeData theme;
+  final ShadColorScheme colorScheme;
+
+  static const _notifications = [
+    _NotifItem(
+      icon: LucideIcons.triangleAlert,
+      title: '"Deep Work" is due in 2 days',
+      subtitle: 'Return or renew before Mar 4, 2026',
+      time: 'Just now',
+      color: Colors.orange,
+      isUnread: true,
+    ),
+    _NotifItem(
+      icon: LucideIcons.circleCheck,
+      title: 'Reservation confirmed',
+      subtitle: '"Atomic Habits" is ready for pickup',
+      time: '1 hr ago',
+      color: Colors.green,
+      isUnread: true,
+    ),
+    _NotifItem(
+      icon: LucideIcons.bookOpen,
+      title: 'New arrivals this week',
+      subtitle: '14 new books added to the catalog',
+      time: '3 hrs ago',
+      color: Colors.blue,
+      isUnread: false,
+    ),
+    _NotifItem(
+      icon: LucideIcons.mail,
+      title: 'Monthly reading summary',
+      subtitle: 'You read 3 books in February',
+      time: '1 day ago',
+      color: Colors.purple,
+      isUnread: false,
+    ),
+  ];
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        // Handle bar
+        Container(
+          margin: const EdgeInsets.only(top: 12),
+          width: 36,
+          height: 4,
+          decoration: BoxDecoration(
+            color: colorScheme.border,
+            borderRadius: BorderRadius.circular(2),
+          ),
+        ),
+        // Header
+        Padding(
+          padding: const EdgeInsets.fromLTRB(20, 16, 20, 8),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text(
+                'Notifications',
+                style: theme.textTheme.h4.copyWith(
+                  color: colorScheme.foreground,
+                  fontWeight: FontWeight.w700,
+                  letterSpacing: -0.4,
+                ),
+              ),
+              ShadButton.ghost(
+                size: ShadButtonSize.sm,
+                onPressed: () {},
+                child: Text(
+                  'Mark all read',
+                  style: theme.textTheme.small.copyWith(
+                    color: colorScheme.primary,
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+        Divider(height: 1, color: colorScheme.border),
+        // List
+        Flexible(
+          child: ListView.separated(
+            shrinkWrap: true,
+            padding: const EdgeInsets.symmetric(vertical: 8),
+            itemCount: _notifications.length,
+            separatorBuilder: (_, __) =>
+                Divider(height: 1, indent: 68, color: colorScheme.border),
+            itemBuilder: (_, i) {
+              final n = _notifications[i];
+              return _NotifTile(
+                item: n,
+                theme: theme,
+                colorScheme: colorScheme,
+              );
+            },
+          ),
+        ),
+        SizedBox(height: MediaQuery.of(context).padding.bottom + 8),
+      ],
+    );
+  }
+}
+
+class _NotifTile extends StatelessWidget {
+  const _NotifTile({
+    required this.item,
+    required this.theme,
+    required this.colorScheme,
+  });
+
+  final _NotifItem item;
+  final ShadThemeData theme;
+  final ShadColorScheme colorScheme;
+
+  @override
+  Widget build(BuildContext context) {
+    return InkWell(
+      onTap: () {},
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Container(
+              width: 38,
+              height: 38,
+              decoration: BoxDecoration(
+                color: item.color.withOpacity(0.1),
+                borderRadius: BorderRadius.circular(10),
+              ),
+              child: Icon(item.icon, size: 18, color: item.color.withOpacity(0.8)),
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    item.title,
+                    style: theme.textTheme.small.copyWith(
+                      color: colorScheme.foreground,
+                      fontWeight: item.isUnread ? FontWeight.w600 : FontWeight.w400,
+                    ),
+                  ),
+                  const SizedBox(height: 2),
+                  Text(
+                    item.subtitle,
+                    style: theme.textTheme.muted.copyWith(fontSize: 12),
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(width: 8),
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.end,
+              children: [
+                Text(
+                  item.time,
+                  style: theme.textTheme.muted.copyWith(fontSize: 10),
+                ),
+                if (item.isUnread) ...[
+                  const SizedBox(height: 6),
+                  Container(
+                    width: 7,
+                    height: 7,
+                    decoration: BoxDecoration(
+                      color: colorScheme.primary,
+                      shape: BoxShape.circle,
+                    ),
+                  ),
+                ],
+              ],
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _NotifItem {
+  final IconData icon;
+  final String title;
+  final String subtitle;
+  final String time;
+  final Color color;
+  final bool isUnread;
+
+  const _NotifItem({
+    required this.icon,
+    required this.title,
+    required this.subtitle,
+    required this.time,
+    required this.color,
+    required this.isUnread,
+  });
 }
