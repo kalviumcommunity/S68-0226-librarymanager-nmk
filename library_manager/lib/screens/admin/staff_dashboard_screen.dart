@@ -5,6 +5,7 @@ import '../../main.dart';
 import '../../models/user_model.dart';
 import '../../providers/auth_provider.dart';
 import '../../widgets/app_bottom_nav.dart';
+import '../../widgets/app_drawer.dart';
 
 class StaffDashboardScreen extends StatefulWidget {
   const StaffDashboardScreen({super.key});
@@ -46,8 +47,15 @@ class _StaffDashboardScreenState extends State<StaffDashboardScreen> {
 
 // ── Dashboard Tab ─────────────────────────────────────────────────────────────
 
-class _StaffDashboardTab extends StatelessWidget {
+class _StaffDashboardTab extends StatefulWidget {
   const _StaffDashboardTab();
+
+  @override
+  State<_StaffDashboardTab> createState() => _StaffDashboardTabState();
+}
+
+class _StaffDashboardTabState extends State<_StaffDashboardTab> {
+  final _scaffoldKey = GlobalKey<ScaffoldState>();
 
   static const _activity = [
     _ActivityEntry(name: 'Aria Johnson', action: 'Borrowed', title: 'Atomic Habits', time: '10 min ago', icon: LucideIcons.bookOpen),
@@ -63,7 +71,9 @@ class _StaffDashboardTab extends StatelessWidget {
     final colorScheme = theme.colorScheme;
 
     return Scaffold(
+      key: _scaffoldKey,
       backgroundColor: colorScheme.background,
+      drawer: const AppDrawer(),
       body: CustomScrollView(
         slivers: [
           SliverAppBar(
@@ -71,31 +81,30 @@ class _StaffDashboardTab extends StatelessWidget {
             elevation: 0,
             backgroundColor: colorScheme.background,
             surfaceTintColor: Colors.transparent,
-            title: Row(
-              children: [
-                Container(
-                  width: 30,
-                  height: 30,
+            leading: GestureDetector(
+              onTap: () => _scaffoldKey.currentState?.openDrawer(),
+              child: Padding(
+                padding: const EdgeInsets.all(10),
+                child: Container(
                   decoration: BoxDecoration(
                     color: colorScheme.primary,
                     borderRadius: BorderRadius.circular(8),
                   ),
                   child: Icon(LucideIcons.bookOpen, size: 16, color: colorScheme.primaryForeground),
                 ),
-                const SizedBox(width: 10),
-                Text(
-                  'LibraryOS',
-                  style: theme.textTheme.h4.copyWith(
-                    color: colorScheme.foreground,
-                    fontWeight: FontWeight.w700,
-                    letterSpacing: -0.5,
-                  ),
-                ),
-              ],
+              ),
+            ),
+            title: Text(
+              'LibraryOS',
+              style: theme.textTheme.h4.copyWith(
+                color: colorScheme.foreground,
+                fontWeight: FontWeight.w700,
+                letterSpacing: -0.5,
+              ),
             ),
             actions: [
               Container(
-                margin: const EdgeInsets.only(right: 16),
+                margin: const EdgeInsets.only(right: 6),
                 padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                 decoration: BoxDecoration(
                   color: Colors.blue.withOpacity(0.1),
@@ -107,6 +116,12 @@ class _StaffDashboardTab extends StatelessWidget {
                   style: TextStyle(fontSize: 11, fontWeight: FontWeight.w600, color: Colors.blue[700]),
                 ),
               ),
+              ShadButton.ghost(
+                size: ShadButtonSize.sm,
+                onPressed: () {},
+                child: Icon(LucideIcons.bell, size: 18, color: colorScheme.mutedForeground),
+              ),
+              const SizedBox(width: 4),
             ],
             bottom: PreferredSize(
               preferredSize: const Size.fromHeight(1),
